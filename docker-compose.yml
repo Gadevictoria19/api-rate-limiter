@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: rate-limiter-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes   # persist data across restarts
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: rate-limiter-app
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RATE_LIMIT_CAPACITY=10      # token bucket max capacity
+      - RATE_LIMIT_REFILL=2         # tokens refilled per second
+    depends_on:
+      redis:
+        condition: service_healthy  # wait for Redis to be ready before starting app
+    restart: unless-stopped
+
+volumes:
+  redis_data:

@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-rate-limiter
+
+# Redis connection
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  max-connections: 50
+
+# Token Bucket config — override via env vars in Docker
+rate-limiter:
+  capacity: ${RATE_LIMIT_CAPACITY:10}      # max tokens per bucket
+  refill-rate: ${RATE_LIMIT_REFILL:2}      # tokens added per second
+
+# Actuator — expose health and info
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.victoria.ratelimiter: DEBUG
